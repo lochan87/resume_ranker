@@ -201,6 +201,29 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
 - In-memory and on-disk caching (`.cache/github/`) ensures handles are never fetched more than once.
 - Unauthenticated requests gracefully handle HTTP 403 / 429 rate limits without crashing.
 
+## FastAPI Service (Web Wrapper)
+
+In addition to the CLI, the pipeline is wrapped in a lightweight FastAPI application (`src/api.py`):
+
+### Starting the Server
+```bash
+uvicorn src.api:app --host 127.0.0.1 --port 8000 --reload
+```
+
+### Endpoints
+- **`GET /health`**: Health check probe returning service status.
+- **`POST /screen`**: Triggers resume screening over a designated directory with bounded concurrency.
+  ```bash
+  curl -X POST http://127.0.0.1:8000/screen \
+    -H "Content-Type: application/json" \
+    -d '{"input_path": "./resumes", "no_llm": false, "max_workers": 4}'
+  ```
+- **`GET /results`**: Fetches the structured JSON screening report.
+  ```bash
+  curl http://127.0.0.1:8000/results
+  ```
+- **Interactive Documentation**: Available at `http://127.0.0.1:8000/docs` (Swagger UI).
+
 ---
 
 ## If I Had More Time
