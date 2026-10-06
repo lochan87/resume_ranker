@@ -1,5 +1,5 @@
 from pathlib import Path
-import fitz  # PyMuPDF
+import pymupdf
 import docx
 import pytest
 
@@ -22,13 +22,13 @@ def temp_fixtures_dir(tmp_path: Path):
 
 
 def create_sample_pdf(path: Path, text: str, link_url: str = None):
-    doc = fitz.open()
+    doc = pymupdf.open()
     page = doc.new_page()
-    p = fitz.Point(50, 72)
+    p = pymupdf.Point(50, 72)
     page.insert_text(p, text, fontsize=12)
     if link_url:
-        rect = fitz.Rect(50, 90, 200, 110)
-        page.insert_link({"kind": fitz.LINK_URI, "from": rect, "uri": link_url})
+        rect = pymupdf.Rect(50, 90, 200, 110)
+        page.insert_link({"kind": pymupdf.LINK_URI, "from": rect, "uri": link_url})
     doc.save(path)
     doc.close()
 

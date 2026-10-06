@@ -1,0 +1,13 @@
+Alice Sterling
+alice.sterling@example.com
+https://github.com/alice-sterling
+
+Technical Skills:
+Python, FastAPI, LangGraph, LangChain, PostgreSQL, Docker, Redis, RAG, ChromaDB
+
+Experience:
+Senior AI Systems Engineer at Apex Innovations (2022 - Present)
+- Designed and built an autonomous multi-agent customer support orchestration system using LangGraph and Python.
+- Implemented RAG pipeline with hybrid search and Chroma vector store, indexing 50,000 internal documents.
+- Developed robust FastAPI microservices with Redis caching and asynchronous job queues.
+- Containerized services with Docker and deployed on Google Cloud Platform.

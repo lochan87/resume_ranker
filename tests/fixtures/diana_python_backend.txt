@@ -1,0 +1,12 @@
+Diana Prince
+diana.prince@example.com
+https://github.com/dianaprince
+
+Technical Skills:
+Python, Django, PostgreSQL, Redis, Celery, Docker, AWS
+
+Experience:
+Senior Backend Engineer at FinTech Systems (2019 - Present)
+- Designed mission-critical payment APIs using Django and PostgreSQL.
+- Implemented background worker queues with Celery and Redis.
+- Orchestrated microservices with Docker on AWS ECS.

@@ -1,0 +1,11 @@
+Charlie Davis
+charlie.davis@example.com
+https://github.com/charliedavis
+
+Technical Skills:
+Python, Machine Learning, Deep Learning, Data Science, Pandas, NumPy, Scikit-Learn
+
+Experience:
+Data Scientist at DataCorp Analytics (2020 - Present)
+- Developed machine learning forecasting models predicting churn with scikit-learn.
+- Built tabular regression algorithms and exploratory data analysis notebooks in pandas.

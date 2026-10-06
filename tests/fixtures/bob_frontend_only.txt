@@ -1,0 +1,12 @@
+Bob Montgomery
+bob.montgomery@example.com
+https://github.com/bobmontgomery
+
+Technical Skills:
+TypeScript, JavaScript, React, Next.js, HTML5, CSS3, TailwindCSS, Jest
+
+Experience:
+Senior Frontend Developer at WebTech Studio (2021 - Present)
+- Built interactive frontend applications using Next.js and React.
+- Designed accessible UI components with Tailwind CSS.
+- Integrated third-party GraphQL APIs and handled client-side state with Zustand.

@@ -4,7 +4,7 @@ import hashlib
 import logging
 from pathlib import Path
 from typing import Optional
-import fitz  # PyMuPDF
+import pymupdf
 import pdfplumber
 import docx
 
@@ -30,7 +30,7 @@ def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
     links: list[str] = []
 
     try:
-        doc = fitz.open(path)
+        doc = pymupdf.open(path)
         if doc.is_encrypted:
             if not doc.authenticate(""):
                 raise ValueError("Encrypted PDF document cannot be read")
