@@ -158,3 +158,64 @@ def test_assess_candidate_retry_and_failure(tmp_path: Path):
     assert res is None
     # 5 attempts made (initial + 4 retries)
     assert provider.call_count == 5
+
+
+def test_cache_only_stores_successful_llm_results(tmp_path: Path):
+    """Ensure heuristic fallbacks are never cached, allowing reruns to retry LLM."""
+    extracted = ExtractedInfo(candidate_name="Eva", matched_skills=["Python", "RAG"])
+    text = "Eva resume with Python and RAG"
+    clock = FakeClock()
+    llm_dir = tmp_path / "llm"
+
+    # Run 1: Provider fails -> assess_candidate returns None
+    failing_provider = MagicMock(side_effect=RuntimeError("Provider 500 error"))
+    res1 = assess_candidate(
+        text,
+        extracted,
+        cache_dir=tmp_path,
+        provider_fn=failing_provider,
+        sleep_fn=clock.sleep,
+        time_fn=clock.time,
+    )
+    assert res1 is None
+    # Disk cache MUST NOT contain any cached result for this resume
+    cached_files = list(llm_dir.glob("*.json")) if llm_dir.exists() else []
+    assert len(cached_files) == 0
+
+    # Run 2: Provider recovers -> assess_candidate retries LLM call and succeeds
+    mock_success = ProjectAssessment(
+        ai_project_depth=38,
+        python_backend=28,
+        cloud_fullstack=14,
+        engineering_depth=5,
+    )
+    success_provider = MagicMock(return_value=mock_success)
+    res2 = assess_candidate(
+        text,
+        extracted,
+        cache_dir=tmp_path,
+        provider_fn=success_provider,
+        sleep_fn=clock.sleep,
+        time_fn=clock.time,
+    )
+    assert res2 is not None
+    assert res2.ai_project_depth == 38
+    assert success_provider.call_count == 1
+
+    # Disk cache now contains exactly 1 cached file
+    cached_files = list(llm_dir.glob("*.json"))
+    assert len(cached_files) == 1
+
+    # Run 3: Rerun reuses cached result without calling provider
+    res3 = assess_candidate(
+        text,
+        extracted,
+        cache_dir=tmp_path,
+        provider_fn=success_provider,
+        sleep_fn=clock.sleep,
+        time_fn=clock.time,
+    )
+    assert res3 is not None
+    assert res3.ai_project_depth == 38
+    # Call count remained 1 (hit cache!)
+    assert success_provider.call_count == 1
