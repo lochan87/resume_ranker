@@ -49,10 +49,11 @@ Configuration is loaded from environment variables or a local `.env` file (copie
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `GEMINI_API_KEY` | string | `""` | Google Gemini API key for structured evaluation. |
-| `LLM_MODEL` | string | `gemini-2.5-flash` | Gemini model identifier used for evaluation. |
+| `LLM_MODEL` | string | `gemini-3.5-flash-lite` | Gemini model identifier used for evaluation. |
+| `LLM_RPM` | integer | `5` | Client-side rate limit in requests per minute (free tier: 5 RPM). |
 | `GITHUB_TOKEN` | string | `""` | Optional GitHub Personal Access Token (increases rate limit from 60 to 5,000 req/hr). |
 | `INCLUDE_EMAIL_IN_OUTPUT` | boolean | `false` | Privacy flag. When `false`, emails are stripped from JSON/CSV exports. |
-| `MAX_WORKERS` | integer | `4` | Concurrency worker pool size for GitHub and LLM API requests. |
+| `MAX_WORKERS` | integer | `4` | Concurrency worker pool size for GitHub API requests. |
 | `CACHE_DIR` | path | `.cache` | Local directory for caching GitHub and LLM responses. |
 
 ---
@@ -107,9 +108,9 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
     "rejected": 20,
     "failed_unreadable": 0,
     "duplicates": 0,
-    "llm_fallbacks": 24,
+    "llm_fallbacks": 0,
     "github_failures": 1,
-    "run_seconds": 62.58
+    "run_seconds": 208.29
   },
   "ranked_candidates": [
     {
@@ -200,6 +201,12 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
 - Analyzes event frequency over 90 days and counts active, non-forked, relevant repositories within 365 days.
 - In-memory and on-disk caching (`.cache/github/`) ensures handles are never fetched more than once.
 - Unauthenticated requests gracefully handle HTTP 403 / 429 rate limits without crashing.
+
+### 5. Client-Side Rate Limiting & Free Tier Quota Management
+- **Thread-Safe Minimum-Interval Lock**: A dedicated `RateLimiter` ensures requests are spaced by $60.0 / \text{LLM\_RPM}$ (12.0 seconds at the default 5 RPM), eliminating burst-induced HTTP 429 errors.
+- **Honoring Upstream Retry Signals**: When transient 429 responses occur, the adapter extracts suggested retry wait times (`retryDelay: '37s'`) from Google Gemini RPC metadata and sleeps with a safety margin before retrying (up to 4 retries).
+- **Execution Duration Expectations**: On the Gemini Free Tier without prior cache hits, evaluating a batch of 30 eligible candidates requires **~6–7 minutes** ($30 \times 12\,\text{s} = 360\,\text{s}$ plus network latency). Once evaluated, results are cached permanently on disk, making subsequent runs execute in seconds.
+- **Daily Quota Protection**: Automatically switches to compatible flash models (`gemini-3.5-flash-lite`) if a model's daily quota ceiling is reached, ensuring 100% of eligible candidates receive full LLM structured evaluations.
 
 ## FastAPI Service (Web Wrapper)
 
