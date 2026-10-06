@@ -19,8 +19,10 @@ htmlcov/
 .env
 
 # Output & temporary data
-output/
 scratch/
+output/*
+!output/results.json
+!output/results.csv
 
 # Personal resume data - DO NOT COMMIT
 resumes/*

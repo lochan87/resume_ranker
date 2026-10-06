@@ -131,7 +131,12 @@ def assemble_candidate_score(
         ai_depth = min(ai_depth, DEFAULT_CONFIG.thresholds.skills_only_ai_cap)
 
     # Guard C: Evidence verification against resume text
-    verified_evidence, dropped_any = _verify_evidence_quotes(assessment.evidence, text)
+    ev_raw = (
+        assessment.evidence.model_dump()
+        if hasattr(assessment.evidence, "model_dump")
+        else dict(assessment.evidence or {})
+    )
+    verified_evidence, dropped_any = _verify_evidence_quotes(ev_raw, text)
     concerns = list(assessment.concerns)
     if dropped_any:
         concerns.append("some evidence could not be verified")

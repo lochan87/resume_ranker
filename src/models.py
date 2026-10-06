@@ -59,6 +59,21 @@ class GitHubEnrichment(BaseModel):
     relevant_repos: int = 0
 
 
+class CategoryEvidence(BaseModel):
+    ai_project_depth: list[str] = Field(
+        default_factory=list, description="Verifiable quotes for AI project depth"
+    )
+    python_backend: list[str] = Field(
+        default_factory=list, description="Verifiable quotes for Python backend"
+    )
+    cloud_fullstack: list[str] = Field(
+        default_factory=list, description="Verifiable quotes for cloud and fullstack"
+    )
+    engineering_depth: list[str] = Field(
+        default_factory=list, description="Verifiable quotes for engineering depth"
+    )
+
+
 class ProjectAssessment(BaseModel):
     """LLM structured response output model."""
 
@@ -77,8 +92,8 @@ class ProjectAssessment(BaseModel):
     thin_wrapper_penalty: int = Field(
         ge=0, le=15, default=0, description="Penalty for thin wrappers/tutorials (0-15)"
     )
-    evidence: dict[str, list[str]] = Field(
-        default_factory=dict,
+    evidence: CategoryEvidence = Field(
+        default_factory=CategoryEvidence,
         description="Verifiable quotes from resume per category",
     )
     project_summary: str = Field(
