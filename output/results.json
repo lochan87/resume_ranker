@@ -8,12 +8,13 @@
     "duplicates": 0,
     "llm_fallbacks": 0,
     "github_failures": 1,
-    "run_seconds": 208.29
+    "run_seconds": 1.2
   },
   "ranked_candidates": [
     {
       "rank": 1,
       "candidate_name": "Abhinav Mishra",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 96,
       "score_breakdown": {
@@ -78,6 +79,7 @@
     {
       "rank": 2,
       "candidate_name": "Yash Maini",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 95,
       "score_breakdown": {
@@ -151,6 +153,7 @@
     {
       "rank": 3,
       "candidate_name": "Jyandeep Baishya",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 93,
       "score_breakdown": {
@@ -214,6 +217,7 @@
     {
       "rank": 4,
       "candidate_name": "Sumaiya Sultana Shaik",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 93,
       "score_breakdown": {
@@ -278,7 +282,8 @@
     },
     {
       "rank": 5,
-      "candidate_name": "Candidate 35",
+      "candidate_name": "Prathamesh Patil",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 93,
       "score_breakdown": {
@@ -350,6 +355,7 @@
     {
       "rank": 6,
       "candidate_name": "V Sree Raghu Vardhan",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 90,
       "score_breakdown": {
@@ -420,6 +426,7 @@
     {
       "rank": 7,
       "candidate_name": "Arjun Kumar",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 88,
       "score_breakdown": {
@@ -493,6 +500,7 @@
     {
       "rank": 8,
       "candidate_name": "Prajwal A S",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 87,
       "score_breakdown": {
@@ -558,6 +566,7 @@
     {
       "rank": 9,
       "candidate_name": "Vaibhav Wakde",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 86,
       "score_breakdown": {
@@ -628,6 +637,7 @@
     {
       "rank": 10,
       "candidate_name": "Hari Shanker Sharma",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 86,
       "score_breakdown": {
@@ -692,6 +702,7 @@
     {
       "rank": 11,
       "candidate_name": "Priyanshu Kumar",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 86,
       "score_breakdown": {
@@ -756,6 +767,7 @@
     {
       "rank": 12,
       "candidate_name": "Gourab Das",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 83,
       "score_breakdown": {
@@ -825,6 +837,7 @@
     {
       "rank": 13,
       "candidate_name": "Arunima Saha",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 80,
       "score_breakdown": {
@@ -888,6 +901,7 @@
     {
       "rank": 14,
       "candidate_name": "Kiran Naregal",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 79,
       "score_breakdown": {
@@ -945,6 +959,7 @@
     {
       "rank": 15,
       "candidate_name": "Harsha A",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 79,
       "score_breakdown": {
@@ -1011,6 +1026,7 @@
     {
       "rank": 16,
       "candidate_name": "Shubhanshu Navadiya",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 77,
       "score_breakdown": {
@@ -1079,6 +1095,7 @@
     {
       "rank": 17,
       "candidate_name": "Nevil Jasmin Mehta",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 70,
       "score_breakdown": {
@@ -1145,6 +1162,7 @@
     {
       "rank": 18,
       "candidate_name": "Vivek Chimnani",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 70,
       "score_breakdown": {
@@ -1203,6 +1221,7 @@
     {
       "rank": 19,
       "candidate_name": "P.V. Jayavardhana Sai",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 68,
       "score_breakdown": {
@@ -1268,6 +1287,7 @@
     {
       "rank": 20,
       "candidate_name": "Annisha S",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 62,
       "score_breakdown": {
@@ -1331,6 +1351,7 @@
     {
       "rank": 21,
       "candidate_name": "Vivek Shekhawat",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 56,
       "score_breakdown": {
@@ -1389,6 +1410,7 @@
     {
       "rank": 22,
       "candidate_name": "M Sai Kushith",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 55,
       "score_breakdown": {
@@ -1454,6 +1476,7 @@
     {
       "rank": 23,
       "candidate_name": "Thejeshwaar Paasila",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 54,
       "score_breakdown": {
@@ -1518,6 +1541,7 @@
     {
       "rank": 24,
       "candidate_name": "Vikram Madhyasta",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 48,
       "score_breakdown": {
@@ -1577,6 +1601,7 @@
     {
       "rank": 25,
       "candidate_name": "Aswin Raj R",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 40,
       "score_breakdown": {
@@ -1632,6 +1657,7 @@
     {
       "rank": 26,
       "candidate_name": "Raj Thumar",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 40,
       "score_breakdown": {
@@ -1689,6 +1715,7 @@
     {
       "rank": 27,
       "candidate_name": "Atul Kumar",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 35,
       "score_breakdown": {
@@ -1748,6 +1775,7 @@
     {
       "rank": 28,
       "candidate_name": "Saif Ali Nagori",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 31,
       "score_breakdown": {
@@ -1799,6 +1827,7 @@
     {
       "rank": 29,
       "candidate_name": "Krishan Kant",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 24,
       "score_breakdown": {
@@ -1863,6 +1892,7 @@
     {
       "rank": 30,
       "candidate_name": "Dornipadu Karthika Chaitrika",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 23,
       "score_breakdown": {
@@ -1915,6 +1945,7 @@
   "rejected_candidates": [
     {
       "candidate_name": "Kartikay Sinha",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack",
@@ -1931,6 +1962,7 @@
     },
     {
       "candidate_name": "Shivam Raj",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack",
@@ -1948,6 +1980,7 @@
     },
     {
       "candidate_name": "Agam Jain",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -1968,6 +2001,7 @@
     },
     {
       "candidate_name": "Yuvaraj R",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -1987,6 +2021,7 @@
     },
     {
       "candidate_name": "Vishwas Badiger",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2003,6 +2038,7 @@
     },
     {
       "candidate_name": "Md Azizul Islam",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack"
@@ -2021,6 +2057,7 @@
     },
     {
       "candidate_name": "Jaya Nandi",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2038,6 +2075,7 @@
     },
     {
       "candidate_name": "Harshit Kumar Mishra",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack",
@@ -2057,7 +2095,8 @@
       "source_file": "resumes\\candidate_18.pdf"
     },
     {
-      "candidate_name": "Programming Language Python",
+      "candidate_name": "Priya R",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2070,7 +2109,8 @@
       "source_file": "resumes\\candidate_20.pdf"
     },
     {
-      "candidate_name": "Higher Secondary Science- PCMB",
+      "candidate_name": "Manoj Kumar K R",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2091,6 +2131,7 @@
     },
     {
       "candidate_name": "Gayathri Palraj",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2105,6 +2146,7 @@
     },
     {
       "candidate_name": "Shreya Chauhan",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No AI/agentic project evidence"
@@ -2120,6 +2162,7 @@
     },
     {
       "candidate_name": "Mukul Pal",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack"
@@ -2138,6 +2181,7 @@
     },
     {
       "candidate_name": "Nisarga H. S.",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2151,6 +2195,7 @@
     },
     {
       "candidate_name": "Aditi Kala",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2172,6 +2217,7 @@
     },
     {
       "candidate_name": "Pavani A",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2196,6 +2242,7 @@
     },
     {
       "candidate_name": "Anjali Patil",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack",
@@ -2212,6 +2259,7 @@
     },
     {
       "candidate_name": "Parshuram Kumar",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
@@ -2233,6 +2281,7 @@
     },
     {
       "candidate_name": "Aabhar Gupta",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "No evidence of Python stack",
@@ -2250,6 +2299,7 @@
     },
     {
       "candidate_name": "Nidhi Km",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": [
         "generic AI/ML keywords only, no LLM/RAG/agent evidence"
