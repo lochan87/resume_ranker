@@ -1,11 +1,13 @@
-"""LLM provider adapter with structured output, retries, disk caching, and prompt-injection safety."""
+"""LLM provider adapter with structured output, client-side rate limiting, retries, and disk caching."""
 
 import hashlib
 import json
 import logging
 from pathlib import Path
+import re
+import threading
 import time
-from typing import Optional
+from typing import Callable, Optional
 
 from src.config import DEFAULT_CONFIG
 from src.models import ExtractedInfo, ProjectAssessment
@@ -37,6 +39,48 @@ RUBRIC & GUIDELINES:
 8. strengths & concerns:
    - List concrete strengths and red flags or gaps.
 """
+
+
+class RateLimiter:
+    """Thread-safe rate limiter ensuring minimum interval spacing between calls."""
+
+    def __init__(self, rpm: int = 5):
+        self.rpm = max(1, rpm)
+        self.interval = 60.0 / self.rpm
+        self.lock = threading.Lock()
+        self.last_call = 0.0
+
+    def acquire(
+        self,
+        sleep_fn: Callable[[float], None] = time.sleep,
+        time_fn: Callable[[], float] = time.time,
+    ) -> float:
+        with self.lock:
+            now = time_fn()
+            elapsed = now - self.last_call
+            wait = max(0.0, self.interval - elapsed) if self.last_call > 0.0 else 0.0
+            if wait > 0.0:
+                sleep_fn(wait)
+                now = time_fn()
+            self.last_call = now
+            return wait
+
+
+GLOBAL_RATE_LIMITER = RateLimiter(DEFAULT_CONFIG.llm_rpm)
+
+
+def extract_retry_delay(error_exc: Exception) -> Optional[float]:
+    """Parse suggested retry delay from error messages or HTTP 429 details."""
+    err_str = str(error_exc)
+    match = re.search(
+        r"retry(?:\s+in\s+|Delay['\":\s]+)(\d+(?:\.\d+)?)s?", err_str, re.IGNORECASE
+    )
+    if match:
+        try:
+            return float(match.group(1))
+        except ValueError:
+            pass
+    return None
 
 
 def _get_cache_path(text: str, model: str, cache_dir: Path) -> Path:
@@ -109,6 +153,9 @@ def assess_candidate(
     model_name: Optional[str] = None,
     cache_dir: Optional[Path] = None,
     provider_fn=None,
+    rate_limiter: Optional[RateLimiter] = None,
+    sleep_fn: Callable[[float], None] = time.sleep,
+    time_fn: Callable[[], float] = time.time,
 ) -> Optional[ProjectAssessment]:
     """Assess eligible candidate using Gemini LLM structured output or cache. Returns None on failure/no-llm."""
     if no_llm:
@@ -141,11 +188,12 @@ def assess_candidate(
     )
 
     call_impl = provider_fn or (lambda p: _call_gemini_api(p, key, model))
+    limiter = rate_limiter or GLOBAL_RATE_LIMITER
 
-    # Retry loop with backoff (2 retries -> 3 attempts total)
-    max_attempts = 3
-    backoff = 1.0
+    max_attempts = 5
+    backoff = 2.0
     for attempt in range(1, max_attempts + 1):
+        limiter.acquire(sleep_fn=sleep_fn, time_fn=time_fn)
         try:
             assessment = call_impl(prompt)
             _write_cache(cache_path, assessment)
@@ -155,7 +203,14 @@ def assess_candidate(
                 f"LLM assessment attempt {attempt}/{max_attempts} failed: {exc}"
             )
             if attempt < max_attempts:
-                time.sleep(backoff)
+                suggested_delay = extract_retry_delay(exc)
+                delay = (
+                    suggested_delay + 1.0
+                    if suggested_delay is not None
+                    else backoff
+                )
+                logger.info(f"Rate limited or transient failure; retrying in {delay:.1f}s...")
+                sleep_fn(delay)
                 backoff *= 2.0
 
     return None

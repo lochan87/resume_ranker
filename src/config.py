@@ -51,6 +51,9 @@ class Config:
     max_workers: int = field(
         default_factory=lambda: int(os.getenv("MAX_WORKERS", "4"))
     )
+    llm_rpm: int = field(
+        default_factory=lambda: int(os.getenv("LLM_RPM", "5"))
+    )
     cache_dir: Path = field(
         default_factory=lambda: Path(os.getenv("CACHE_DIR", ".cache"))
     )

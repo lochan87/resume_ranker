@@ -130,6 +130,10 @@ def run_screening_pipeline(
     )
 
     # Assess eligible candidates with bounded concurrency
+    total_eligible = len(eligible_queue)
+    completed_count = 0
+    llm_workers = 1 if not no_llm else workers
+
     def _assess_worker(item: tuple[ParsedResume, ExtractedInfo]):
         r, ext = item
         gh_data = github_map.get(ext.github_username) or github_map.get(None)
@@ -146,11 +150,13 @@ def run_screening_pipeline(
         )
         return scored
 
-    with ThreadPoolExecutor(max_workers=workers) as executor:
+    with ThreadPoolExecutor(max_workers=llm_workers) as executor:
         futures = {executor.submit(_assess_worker, item): item for item in eligible_queue}
         for fut in as_completed(futures):
             try:
                 candidate = fut.result()
+                completed_count += 1
+                print(f"Scored {completed_count}/{total_eligible} eligible candidates...", flush=True)
                 if candidate.scoring_method == ScoringMethod.HEURISTIC_FALLBACK.value:
                     llm_fallbacks += 1
                 ranked_candidates.append(candidate)
