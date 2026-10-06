@@ -74,18 +74,22 @@ def extract_name(text: str, fallback_filename: str) -> str:
     for line in lines[:8]:
         # Skip headers, emails, links, phones, and non-name patterns
         lower = line.lower()
-        if any(h in lower for h in ("resume", "curriculum vitae", "cv", "page ", "email:", "phone:")):
+        if any(h in lower for h in ("resume", "curriculum vitae", "cv", "page ", "email:", "phone:", "skills", "experience", "projects", "education")):
             continue
         if "@" in line or "http://" in line or "https://" in line or "github.com" in line:
             continue
         if re.search(r"\d{3,}", line):
             continue
-        # Name should be 2 to 4 words of reasonable length
-        words = line.split()
+
+        # Strip emojis / non-name characters before checking word lengths
+        cleaned = re.sub(r"[^A-Za-z\s.'-]", "", line).strip()
+        cleaned_lower = cleaned.lower()
+        if any(h in cleaned_lower for h in ("resume", "skills", "experience", "education", "projects")):
+            continue
+
+        words = cleaned.split()
         if 2 <= len(words) <= 4 and all(len(w) >= 2 for w in words):
-            cleaned = re.sub(r"[^A-Za-z\s.'-]", "", line).strip()
-            if cleaned:
-                return cleaned
+            return cleaned
 
     # Fallback to cleaned filename
     stem = Path(fallback_filename).stem

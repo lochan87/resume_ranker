@@ -3,6 +3,7 @@
 import hashlib
 import logging
 from pathlib import Path
+import re
 from typing import Optional
 import pymupdf
 import pdfplumber
@@ -29,11 +30,12 @@ def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
     text_chunks: list[str] = []
     links: list[str] = []
 
+    doc = None
     try:
         doc = pymupdf.open(path)
         if doc.is_encrypted:
             if not doc.authenticate(""):
-                raise ValueError("Encrypted PDF document cannot be read")
+                raise ValueError("Encrypted PDF document cannot be read without password")
 
         for page in doc:
             page_text = page.get_text()
@@ -46,7 +48,13 @@ def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
                 if uri and uri.strip():
                     links.append(uri.strip())
         doc.close()
+    except ValueError as val_err:
+        if doc:
+            doc.close()
+        raise val_err
     except Exception as exc:
+        if doc:
+            doc.close()
         logger.warning(f"PyMuPDF failed on {path.name}: {exc}. Trying pdfplumber fallback.")
         text_chunks.clear()
 
@@ -59,10 +67,14 @@ def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
                     if p_text and p_text.strip():
                         text_chunks.append(p_text.strip())
         except Exception as exc:
-            raise ValueError(f"Failed to read PDF with pdfplumber fallback: {exc}") from exc
+            err_str = str(exc) or exc.__class__.__name__
+            if "password" in err_str.lower() or "encrypt" in err_str.lower() or "Password" in exc.__class__.__name__:
+                raise ValueError("Encrypted PDF document cannot be read without password") from exc
+            raise ValueError(f"Failed to read PDF with pdfplumber fallback: {err_str}") from exc
 
     raw_text = "\n\n".join(text_chunks).strip()
-    if not raw_text:
+    meaningful_text = re.sub(r"\(cid:\d+\)", "", raw_text).strip()
+    if not meaningful_text:
         raise ValueError("Empty or scanned-image PDF without extractable text")
 
     # Append extracted hyperlink URLs to raw_text
