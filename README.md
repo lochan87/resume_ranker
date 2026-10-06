@@ -7,8 +7,8 @@ A production-minded, explainable, and fault-tolerant CLI tool designed to screen
 ## Overview
 
 The **AI Resume Screening & Ranking** pipeline evaluates resumes from raw multi-format files (PDF, DOCX, TXT) through a strictly ordered pipeline:
-1. **Ingestion & Deduplication**: Discovers files, computes content hashes (SHA-256), extracts text and embedded hyperlinks (PyMuPDF with pdfplumber fallback).
-2. **Deterministic Extraction**: Extracts candidate name, email, GitHub handle, normalized skills, and section mappings.
+1. **Ingestion & Deduplication**: Discovers files, computes content hashes (SHA-256), extracts text, embedded hyperlinks, and page-1 layout geometry (PyMuPDF with pdfplumber fallback).
+2. **Deterministic Extraction**: Extracts candidate name (layout-scored using font size relative to median, position, and contact overlap), email, GitHub handle, normalized skills, and section mappings.
 3. **Hard Eligibility Filtering**: Zero-LLM deterministic rules ensuring candidates have verifiable Python stack evidence and strong AI/agentic engineering credentials. Rejects generic-only ML/AI claimants with a `needs_review: true` flag.
 4. **GitHub Enrichment**: Non-blocking asynchronous query of GitHub's public REST API for recent activity (90 days) and maintained relevant repositories (up to 10 points).
 5. **LLM Evaluation & Deterministic Post-Guards**: Invokes Google Gemini for rubric-based scoring across AI depth, Python backend, cloud/fullstack, and engineering rigor. Applies strict post-guards (clamping, penalty deductions, evidence verification, low-AI caps).
@@ -115,7 +115,8 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
   "ranked_candidates": [
     {
       "rank": 1,
-      "candidate_name": "Jane Doe",
+      "candidate_name": "Abhinav Mishra",
+      "name_source": "layout",
       "eligible": true,
       "total_score": 96,
       "score_breakdown": {
@@ -143,6 +144,7 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
   "rejected_candidates": [
     {
       "candidate_name": "John Smith",
+      "name_source": "layout",
       "eligible": false,
       "rejection_reasons": ["generic AI/ML keywords only, no LLM/RAG/agent evidence"],
       "matched_skills": ["Python", "Scikit-Learn"],
@@ -230,6 +232,15 @@ uvicorn src.api:app --host 127.0.0.1 --port 8000 --reload
   curl http://127.0.0.1:8000/results
   ```
 - **Interactive Documentation**: Available at `http://127.0.0.1:8000/docs` (Swagger UI).
+
+---
+
+## Run Notes & Historical Reports
+
+Detailed operational notes, execution telemetry, and evaluation tables are preserved in:
+- **Final Notes**: [docs/run_notes.md](docs/run_notes.md)
+- **Run 1 (Baseline with Heuristic Fallback)**: [docs/run1.md](docs/run1.md)
+- **Run 2 (Rate Limiter & 100% LLM Scoring)**: [docs/run2.md](docs/run2.md)
 
 ---
 
