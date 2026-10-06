@@ -57,6 +57,7 @@ def run_screening_pipeline(
             rejected_candidates.append(
                 RejectedCandidate(
                     candidate_name=Path(resume.source_file).stem,
+                    name_source="filename",
                     eligible=False,
                     rejection_reasons=[f"Duplicate file of {resume.duplicate_of}"],
                     matched_skills=[],
@@ -68,7 +69,10 @@ def run_screening_pipeline(
 
         try:
             extracted = extract_candidate_info(
-                resume.raw_text, resume.source_file, resume.links
+                resume.raw_text,
+                resume.source_file,
+                links=resume.links,
+                layout_spans=resume.layout_spans,
             )
             # Check duplicate email
             if extracted.email:
@@ -78,6 +82,7 @@ def run_screening_pipeline(
                     rejected_candidates.append(
                         RejectedCandidate(
                             candidate_name=extracted.candidate_name,
+                            name_source=extracted.name_source,
                             email=extracted.email,
                             eligible=False,
                             rejection_reasons=[
@@ -99,6 +104,7 @@ def run_screening_pipeline(
                 rejected_candidates.append(
                     RejectedCandidate(
                         candidate_name=extracted.candidate_name,
+                        name_source=extracted.name_source,
                         email=extracted.email,
                         eligible=False,
                         rejection_reasons=eligibility.rejection_reasons,
@@ -115,6 +121,7 @@ def run_screening_pipeline(
             rejected_candidates.append(
                 RejectedCandidate(
                     candidate_name=Path(resume.source_file).stem,
+                    name_source="filename",
                     eligible=False,
                     rejection_reasons=[f"Processing error: {str(exc)}"],
                     matched_skills=[],

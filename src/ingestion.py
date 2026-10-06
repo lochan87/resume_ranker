@@ -25,10 +25,11 @@ def compute_file_hash(path: Path) -> str:
     return hasher.hexdigest()
 
 
-def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
-    """Extract text and hyperlinks from PDF using PyMuPDF, falling back to pdfplumber."""
+def extract_pdf_content(path: Path) -> tuple[str, list[str], Optional[list[dict]]]:
+    """Extract text, hyperlinks, and page-1 layout spans from PDF using PyMuPDF."""
     text_chunks: list[str] = []
     links: list[str] = []
+    layout_spans: list[dict] = []
 
     doc = None
     try:
@@ -36,6 +37,50 @@ def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
         if doc.is_encrypted:
             if not doc.authenticate(""):
                 raise ValueError("Encrypted PDF document cannot be read without password")
+
+        if len(doc) > 0:
+            p1 = doc[0]
+            p_dict = p1.get_text("dict")
+            p_h = round(p1.rect.height, 1)
+            for b in p_dict.get("blocks", []):
+                if "lines" not in b:
+                    continue
+                for l in b.get("lines", []):
+                    spans = l.get("spans", [])
+                    if not spans:
+                        continue
+                    line_parts = [s.get("text", "").strip() for s in spans if s.get("text", "").strip()]
+                    if not line_parts:
+                        continue
+                    line_text = " ".join(line_parts)
+                    max_size = max(s.get("size", 0.0) for s in spans)
+                    l_bbox = l.get("bbox", spans[0].get("bbox", [0, 0, 0, 0]))
+                    layout_spans.append({
+                        "text": line_text,
+                        "font_size": round(max_size, 2),
+                        "x": round(l_bbox[0], 1),
+                        "y": round(l_bbox[1], 1),
+                        "page_height": p_h,
+                    })
+                    if len(spans) > 1:
+                        for s in spans:
+                            stext = s.get("text", "").strip()
+                            if stext:
+                                s_bbox = s.get("bbox", [0, 0, 0, 0])
+                                layout_spans.append({
+                                    "text": stext,
+                                    "font_size": round(s.get("size", 0.0), 2),
+                                    "x": round(s_bbox[0], 1),
+                                    "y": round(s_bbox[1], 1),
+                                    "page_height": p_h,
+                                })
+                b_lines = b.get("lines", [])
+                if 1 < len(b_lines) <= 3 and b.get("bbox", [0, 0, 0, 0])[1] < p_h / 3.0:
+                    b_parts = [" ".join(s.get("text", "").strip() for s in l.get("spans", []) if s.get("text", "").strip()) for l in b_lines]
+                    block_text = " ".join(p for p in b_parts if p).strip()
+                    b_sizes = [s.get("size", 0.0) for l in b_lines for s in l.get("spans", []) if s.get("text", "").strip()]
+                    if block_text and b_sizes:
+                        layout_spans.append({"text": block_text, "font_size": round(max(b_sizes), 2), "x": round(b.get("bbox", [0, 0, 0, 0])[0], 1), "y": round(b.get("bbox", [0, 0, 0, 0])[1], 1), "page_height": p_h})
 
         for page in doc:
             page_text = page.get_text()
@@ -81,10 +126,10 @@ def extract_pdf_content(path: Path) -> tuple[str, list[str]]:
     if links:
         raw_text += "\n\nExtracted Links:\n" + "\n".join(links)
 
-    return raw_text, links
+    return raw_text, links, layout_spans
 
 
-def extract_docx_content(path: Path) -> tuple[str, list[str]]:
+def extract_docx_content(path: Path) -> tuple[str, list[str], Optional[list[dict]]]:
     """Extract text from DOCX document."""
     try:
         doc = docx.Document(path)
@@ -97,24 +142,24 @@ def extract_docx_content(path: Path) -> tuple[str, list[str]]:
         text = "\n\n".join(chunks).strip()
         if not text:
             raise ValueError("DOCX document has no text content")
-        return text, []
+        return text, [], None
     except Exception as exc:
         raise ValueError(f"Failed to parse DOCX: {exc}") from exc
 
 
-def extract_txt_content(path: Path) -> tuple[str, list[str]]:
+def extract_txt_content(path: Path) -> tuple[str, list[str], Optional[list[dict]]]:
     """Extract text from TXT file."""
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
             text = f.read().strip()
         if not text:
             raise ValueError("TXT file is empty")
-        return text, []
+        return text, [], None
     except Exception as exc:
         raise ValueError(f"Failed to read TXT file: {exc}") from exc
 
 
-def parse_resume_file(path: Path) -> tuple[str, list[str]]:
+def parse_resume_file(path: Path) -> tuple[str, list[str], Optional[list[dict]]]:
     """Route file parsing by extension."""
     ext = path.suffix.lower()
     if ext == ".pdf":
@@ -158,7 +203,7 @@ def ingest_file(
                 None,
             )
 
-        text, links = parse_resume_file(path)
+        text, links, layout_spans = parse_resume_file(path)
         seen_hashes[file_hash] = str(path)
         return (
             ParsedResume(
@@ -166,6 +211,7 @@ def ingest_file(
                 content_hash=file_hash,
                 raw_text=text,
                 links=links,
+                layout_spans=layout_spans,
                 is_duplicate=False,
             ),
             None,

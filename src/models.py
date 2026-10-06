@@ -23,6 +23,7 @@ class ParsedResume(BaseModel):
     content_hash: str
     raw_text: str
     links: list[str] = Field(default_factory=list)
+    layout_spans: Optional[list[dict]] = None
     is_duplicate: bool = False
     duplicate_of: Optional[str] = None
 
@@ -34,6 +35,7 @@ class IngestionFailure(BaseModel):
 
 class ExtractedInfo(BaseModel):
     candidate_name: str
+    name_source: str = "text"
     email: Optional[str] = None
     github_username: Optional[str] = None
     matched_skills: list[str] = Field(default_factory=list)
@@ -118,6 +120,7 @@ class ScoreBreakdown(BaseModel):
 class RankedCandidate(BaseModel):
     rank: Optional[int] = None
     candidate_name: str
+    name_source: str = "text"
     email: Optional[str] = None
     eligible: bool = True
     total_score: int = Field(ge=0, le=100)
@@ -136,6 +139,7 @@ class RankedCandidate(BaseModel):
 
 class RejectedCandidate(BaseModel):
     candidate_name: str
+    name_source: str = "text"
     email: Optional[str] = None
     eligible: bool = False
     rejection_reasons: list[str] = Field(default_factory=list)

@@ -43,10 +43,11 @@ def test_txt_ingestion(temp_fixtures_dir: Path):
     txt_path = temp_fixtures_dir / "candidate.txt"
     txt_path.write_text("John Doe\nPython and LangChain Developer", encoding="utf-8")
 
-    text, links = extract_txt_content(txt_path)
+    text, links, layout_spans = extract_txt_content(txt_path)
     assert "John Doe" in text
     assert "Python" in text
     assert links == []
+    assert layout_spans is None
 
 
 def test_pdf_ingestion_with_link(temp_fixtures_dir: Path):
@@ -54,19 +55,21 @@ def test_pdf_ingestion_with_link(temp_fixtures_dir: Path):
     github_link = "https://github.com/johndoe"
     create_sample_pdf(pdf_path, "John Doe\nSenior Python Engineer", link_url=github_link)
 
-    text, links = extract_pdf_content(pdf_path)
+    text, links, layout_spans = extract_pdf_content(pdf_path)
     assert "John Doe" in text
     assert github_link in links
     assert github_link in text  # Appended in text as requested in spec
+    assert layout_spans is not None
 
 
 def test_docx_ingestion(temp_fixtures_dir: Path):
     docx_path = temp_fixtures_dir / "candidate.docx"
     create_sample_docx(docx_path, "Jane Smith\nFastAPI and Docker specialist")
 
-    text, links = extract_docx_content(docx_path)
+    text, links, layout_spans = extract_docx_content(docx_path)
     assert "Jane Smith" in text
     assert "FastAPI" in text
+    assert layout_spans is None
 
 
 def test_deduplication(temp_fixtures_dir: Path):

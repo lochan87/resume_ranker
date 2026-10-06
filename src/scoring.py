@@ -160,6 +160,7 @@ def assemble_candidate_score(
     return RankedCandidate(
         rank=None,
         candidate_name=extracted.candidate_name,
+        name_source=extracted.name_source,
         email=extracted.email,
         eligible=True,
         total_score=total,

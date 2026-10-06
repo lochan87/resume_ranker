@@ -65,6 +65,7 @@ def export_csv(
     headers = [
         "rank",
         "candidate_name",
+        "name_source",
         "total_score",
         "ai_project_depth",
         "python_backend",
@@ -89,6 +90,7 @@ def export_csv(
             row = {
                 "rank": cand.rank,
                 "candidate_name": cand.candidate_name,
+                "name_source": cand.name_source,
                 "total_score": cand.total_score,
                 "ai_project_depth": cand.score_breakdown.ai_project_depth,
                 "python_backend": cand.score_breakdown.python_backend,

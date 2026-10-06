@@ -1,7 +1,10 @@
+import pytest
 from src.extraction import (
     extract_email,
     extract_github_username,
+    extract_linkedin_slug,
     extract_name,
+    extract_name_and_source,
     detect_sections,
     extract_skills_by_section,
     extract_candidate_info,
@@ -15,44 +18,85 @@ def test_email_extraction():
 
 
 def test_github_extraction_profile_and_repo():
-    # Profile link
     assert extract_github_username("https://github.com/alexsmith") == "alexsmith"
-    # Repo link extracts user part only
     assert extract_github_username("https://github.com/alexsmith/fastapi-rag") == "alexsmith"
-    # Reserved words ignored
     assert extract_github_username("https://github.com/topics/python") is None
-    # Prefer profile link over repo link
     text = "Check out https://github.com/alexsmith/repo and profile https://github.com/alexsmith"
     assert extract_github_username(text) == "alexsmith"
-    # From links parameter
     assert extract_github_username("No text link", links=["https://github.com/devuser"]) == "devuser"
 
 
-def test_name_extraction():
-    text = "Johnathan Doe\nSoftware Engineer\njohn@example.com"
-    assert extract_name(text, "fallback.pdf") == "Johnathan Doe"
+def test_linkedin_slug_extraction():
+    assert extract_linkedin_slug("Visit https://linkedin.com/in/jane-doe for more") == "jane-doe"
+    assert extract_linkedin_slug("No link", links=["https://www.linkedin.com/in/alex_smith/"]) == "alex_smith"
 
-    # Problem patterns appearing above real name
-    text_with_linkedin = """
-    LinkedIn  Github
+
+def test_education_line_skipped():
+    text = """
+    Higher Secondary Science- PCMB
+    Pre-University College of Science
+    Aarav Mehta
+    aarav.mehta@example.com
+    Software Developer
+    """
+    name, source = extract_name_and_source(text, "cand_21.pdf")
+    assert name == "Aarav Mehta"
+    assert source == "text"
+
+
+def test_social_and_portfolio_lines_skipped():
+    text = """
+    LinkedIn Github
     Candidate Portfolio
     Ananya Sharma
     ananya@example.com
-    Software Developer
     """
-    assert extract_name(text_with_linkedin, "cand_35.pdf") == "Ananya Sharma"
+    name, source = extract_name_and_source(text, "cand_35.pdf")
+    assert name == "Ananya Sharma"
 
-    text_with_job_title = """
-    SOFTWARE ENGINEER
-    Backend Developer
-    Rohan Verma
-    rohan@example.com
+
+def test_name_split_across_spans():
+    layout_spans = [
+        {"text": "Vikram Malhotra", "font_size": 22.0, "x": 40.0, "y": 30.0, "page_height": 800.0},
+        {"text": "Software Engineer", "font_size": 12.0, "x": 40.0, "y": 60.0, "page_height": 800.0},
+    ]
+    text = "Software Engineer\nPython FastAPI\nemail: test@example.com"
+    name, source = extract_name_and_source(text, "cand_test.pdf", layout_spans=layout_spans)
+    assert name == "Vikram Malhotra"
+    assert source == "layout"
+
+
+def test_email_fallback_name():
+    ugly_text = """
+    Software Engineer Developer Intern
+    Education Degree B.Tech CGPA 9.0
+    Skills Python FastAPI
+    Contact: jane.doe@example.com
     """
-    assert extract_name(text_with_job_title, "cand_30.pdf") == "Rohan Verma"
+    name, source = extract_name_and_source(ugly_text, "unknown_resume.pdf")
+    assert name == "Jane Doe"
+    assert source == "email"
 
-    # Fallback to filename
-    ugly_text = "Curriculum Vitae\nPage 1\nhttp://link.com"
-    assert extract_name(ugly_text, "candidate_07.pdf") == "Candidate 07"
+
+def test_all_caps_name_title_cased():
+    text = """
+    KAVITA RAMAN
+    Full Stack Developer
+    kavita@example.com
+    """
+    name, source = extract_name_and_source(text, "cand_caps.pdf")
+    assert name == "Kavita Raman"
+
+
+def test_filename_fallback_when_nothing_works():
+    ugly_text = """
+    Curriculum Vitae Resume
+    Software Engineer Developer Intern
+    Contact user123@example.com
+    """
+    name, source = extract_name_and_source(ugly_text, "candidate_35.pdf")
+    assert name == "Candidate 35"
+    assert source == "filename"
 
 
 def test_section_and_skills_detection():
@@ -78,18 +122,15 @@ Software Engineer at Acme
     assert "PostgreSQL" in matched
     assert "LangGraph" in matched
     assert "GCP" in matched
-
     assert "PostgreSQL" in by_sec["skills"]
     assert "LangGraph" in by_sec["projects_experience"]
 
 
 def test_rag_case_sensitivity():
-    # 'RAG' matches
     text_with_rag = "Engineered RAG pipelines with Pinecone"
     info = extract_candidate_info(text_with_rag, "cand.txt")
     assert "RAG" in info.matched_skills
 
-    # lowercase 'rag' should not match
     text_with_lowercase = "Used a rag to clean the desk and studied python"
     info2 = extract_candidate_info(text_with_lowercase, "cand.txt")
     assert "RAG" not in info2.matched_skills
