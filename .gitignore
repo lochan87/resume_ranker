@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Testing & cache
+.pytest_cache/
+.cache/
+.coverage
+htmlcov/
+
+# Local configuration & secrets
+.env
+
+# Output & temporary data
+output/
+scratch/
+
+# Personal resume data - DO NOT COMMIT
+resumes/*
+!resumes/.gitkeep
