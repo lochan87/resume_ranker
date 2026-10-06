@@ -32,6 +32,24 @@ def test_name_extraction():
     text = "Johnathan Doe\nSoftware Engineer\njohn@example.com"
     assert extract_name(text, "fallback.pdf") == "Johnathan Doe"
 
+    # Problem patterns appearing above real name
+    text_with_linkedin = """
+    LinkedIn  Github
+    Candidate Portfolio
+    Ananya Sharma
+    ananya@example.com
+    Software Developer
+    """
+    assert extract_name(text_with_linkedin, "cand_35.pdf") == "Ananya Sharma"
+
+    text_with_job_title = """
+    SOFTWARE ENGINEER
+    Backend Developer
+    Rohan Verma
+    rohan@example.com
+    """
+    assert extract_name(text_with_job_title, "cand_30.pdf") == "Rohan Verma"
+
     # Fallback to filename
     ugly_text = "Curriculum Vitae\nPage 1\nhttp://link.com"
     assert extract_name(ugly_text, "candidate_07.pdf") == "Candidate 07"

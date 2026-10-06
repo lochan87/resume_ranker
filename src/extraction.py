@@ -68,33 +68,61 @@ def extract_github_username(text: str, links: Optional[list[str]] = None) -> Opt
     return None
 
 
+SKIP_NAME_PATTERNS = (
+    "linkedin",
+    "github",
+    "email",
+    "phone",
+    "resume",
+    "cv",
+    "curriculum",
+    "vitae",
+    "candidate",
+    "portfolio",
+    "profile",
+    "summary",
+    "objective",
+    "software engineer",
+    "developer",
+    "intern",
+    "engineer",
+    "skills",
+    "experience",
+    "projects",
+    "education",
+)
+
+
 def extract_name(text: str, fallback_filename: str) -> str:
-    """Best-effort candidate name extraction, falling back to cleaned filename."""
+    """Best-effort candidate name extraction, falling back to title-cased filename."""
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    for line in lines[:8]:
-        # Skip headers, emails, links, phones, and non-name patterns
+    for line in lines[:15]:
         lower = line.lower()
-        if any(h in lower for h in ("resume", "curriculum vitae", "cv", "page ", "email:", "phone:", "skills", "experience", "projects", "education")):
+
+        # Skip lines containing @, digits, or URLs
+        if "@" in line or re.search(r"\d", line):
             continue
-        if "@" in line or "http://" in line or "https://" in line or "github.com" in line:
-            continue
-        if re.search(r"\d{3,}", line):
+        if re.search(r"(?:https?://|www\.|\.com\b|\.org\b|\.io\b|\.dev\b)", line, re.IGNORECASE):
             continue
 
-        # Strip emojis / non-name characters before checking word lengths
+        # Skip lines containing resume keywords, social links, or job titles
+        if any(term in lower for term in SKIP_NAME_PATTERNS):
+            continue
+
+        # Clean line to alphabetic characters, hyphens, periods, and apostrophes
         cleaned = re.sub(r"[^A-Za-z\s.'-]", "", line).strip()
-        cleaned_lower = cleaned.lower()
-        if any(h in cleaned_lower for h in ("resume", "skills", "experience", "education", "projects")):
-            continue
-
         words = cleaned.split()
-        if 2 <= len(words) <= 4 and all(len(w) >= 2 for w in words):
-            return cleaned
 
-    # Fallback to cleaned filename
+        # Prefer an early line with 2-4 alphabetic words in name-like format
+        if 2 <= len(words) <= 4:
+            if all(len(w) >= 2 or (len(w) == 1 and w.isalpha()) for w in words):
+                if not any(w.lower() in ("software", "engineer", "developer", "intern") for w in words):
+                    return cleaned.title() if cleaned.isupper() else cleaned
+
+    # Fallback to title-cased filename
     stem = Path(fallback_filename).stem
-    cleaned = re.sub(r"[_\-]+", " ", stem).strip()
-    return cleaned.title() if cleaned else "Unknown Candidate"
+    cleaned_stem = re.sub(r"[_\-]+", " ", stem).strip()
+    return cleaned_stem.title() if cleaned_stem else "Unknown Candidate"
 
 
 def detect_sections(text: str) -> dict[str, str]:
