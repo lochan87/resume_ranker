@@ -8,9 +8,9 @@ A production-minded, explainable, and fault-tolerant CLI tool designed to screen
 
 The **AI Resume Screening & Ranking** pipeline evaluates resumes from raw multi-format files (PDF, DOCX, TXT) through a strictly ordered pipeline:
 1. **Ingestion & Deduplication**: Discovers files, computes content hashes (SHA-256), extracts text, embedded hyperlinks, and page-1 layout geometry (PyMuPDF with pdfplumber fallback).
-2. **Deterministic Extraction**: Extracts candidate name (layout-scored using font size relative to median, position, and contact overlap), email, GitHub handle, normalized skills, and section mappings.
-3. **Hard Eligibility Filtering**: Zero-LLM deterministic rules ensuring candidates have verifiable Python stack evidence and strong AI/agentic engineering credentials. Rejects generic-only ML/AI claimants with a `needs_review: true` flag.
-4. **GitHub Enrichment**: Non-blocking asynchronous query of GitHub's public REST API for recent activity (90 days) and maintained relevant repositories (up to 10 points).
+2. **Deterministic Extraction**: Extracts candidate name using layout-based scoring (font size relative to page median, vertical position, merged consecutive spans, and contact overlap with email/GitHub/LinkedIn) returning a `name_source` field, along with email, GitHub handle, normalized skills, and section mappings.
+3. **Hard Eligibility Filtering**: Zero-LLM deterministic rules ensuring candidates have verifiable Python stack evidence and strong AI/agentic engineering credentials. The deterministic filter requires explicit evidence of modern AI/LLM/agentic work (LLM APIs, RAG, embeddings, agent frameworks, tool calling). Candidates with only generic ML/data-science keywords, or custom implementations that do not use recognisable terminology, are rejected with needs_review set so a human can double-check. They are not silently dropped.
+4. **GitHub Enrichment**: Bounded thread pool query of GitHub's public REST API for recent activity (90 days) and maintained relevant repositories (up to 10 points).
 5. **LLM Evaluation & Deterministic Post-Guards**: Invokes Google Gemini for rubric-based scoring across AI depth, Python backend, cloud/fullstack, and engineering rigor. Applies strict post-guards (clamping, penalty deductions, evidence verification, low-AI caps).
 6. **Fault-Tolerant Fallback**: If LLM provider quotas or network errors occur, falls back deterministically to section-weighted heuristic scoring without crashing the batch.
 7. **Ranking & Structured Export**: Produces ranked outputs in JSON and CSV, accompanied by a clean terminal summary table.
@@ -96,7 +96,9 @@ pytest -q
 
 ## Output Format
 
-The output is written to structured JSON (`output/results.json`) and a tabular CSV (`output/results.csv`):
+The output is written to structured JSON (`output/results.json`) and a tabular CSV (`output/results.csv`). The candidate entries shown in the sample schema below are illustrative; see [`output/results.json`](output/results.json) for the complete real evaluation output.
+
+> **Performance**: The first uncached run took about 208 s (30 LLM calls spaced at 5 requests per minute on the Gemini free tier); a re-run with the disk cache takes about 1-2 s.
 
 ### JSON Schema
 ```json
@@ -110,7 +112,7 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
     "duplicates": 0,
     "llm_fallbacks": 0,
     "github_failures": 1,
-    "run_seconds": 208.29
+    "run_seconds": 1.2
   },
   "ranked_candidates": [
     {
@@ -174,7 +176,7 @@ The output is written to structured JSON (`output/results.json`) and a tabular C
 - **Two Hard Rules**:
   1. *Python Stack Signal*: Requires `\bpython\b` or major Python ecosystem indicators (FastAPI, Django, Flask, PyTorch, pandas, etc.).
   2. *Strong AI/Agentic Evidence*: Requires concrete terms (LangChain, LangGraph, Google ADK, LlamaIndex, `\bRAG\b`, embeddings, vector search, tool calling, multi-agent). Bare "agent" (e.g. real-estate agent, user agent) is strictly prevented from triggering.
-- **Generic AI Handling**: Candidates citing only classical "machine learning", "deep learning", or "data science" without modern LLM/RAG/agent proof are rejected with a clear explanation and flagged `needs_review: true`, enabling manual recruiter review.
+- **Generic AI Handling**: The deterministic filter requires explicit evidence of modern AI/LLM/agentic work (LLM APIs, RAG, embeddings, agent frameworks, tool calling). Candidates with only generic ML/data-science keywords, or custom implementations that do not use recognisable terminology, are rejected with needs_review set so a human can double-check. They are not silently dropped.
 - **Cross-Stack Safety**: Frontend signals (React, TypeScript, Next.js) never penalize or disqualify candidates if Python + AI criteria are met.
 
 ### 2. Scoring Strategy (100 Points)
@@ -235,22 +237,21 @@ uvicorn src.api:app --host 127.0.0.1 --port 8000 --reload
 
 ---
 
-## Run Notes & Historical Reports
+## Known Limitations
 
-Detailed operational notes, execution telemetry, and evaluation tables are preserved in:
-- **Final Notes**: [docs/run_notes.md](docs/run_notes.md)
-- **Run 1 (Baseline with Heuristic Fallback)**: [docs/run1.md](docs/run1.md)
-- **Run 2 (Rate Limiter & 100% LLM Scoring)**: [docs/run2.md](docs/run2.md)
+- The LLM was not given the current date and flagged valid 2025-2026 dates as "future" in the concerns of about a third of candidates.
+- Two Gemini models (gemini-2.5-flash, then gemini-3.5-flash-lite after the daily free-tier quota) contributed to the scores, and the model used is not stored per candidate.
+- No human-labelled ground truth: weights and cut-offs are not calibrated.
+- Scores cluster at the top (ranks 1-12 are between 83 and 96), so small differences should not be over-read.
+- A name that exists only as an image in a PDF cannot be recovered.
+
+Detailed operational run notes, telemetry, and execution history are linked in [docs/run_notes.md](docs/run_notes.md) (with historical logs in [docs/run1.md](docs/run1.md) and [docs/run2.md](docs/run2.md)).
 
 ---
 
 ## If I Had More Time
 
-1. **Client-Side Token-Bucket Rate Limiter**:
-   - Rather than catching HTTP 429 exceptions from Gemini Free Tier and falling back to heuristic scoring, implement a preemptive token-bucket rate limiter (e.g. 5 RPM or 15 RPM) with an async queue to maximize full LLM evaluations across large batches.
-2. **Visual & Layout-Aware Bounding Box Parsing**:
-   - For complex multi-column resumes, integrate PyMuPDF's `get_text("blocks")` and font metadata to isolate name headers, contact sidebars, and section coordinates instead of relying on linear textual streams.
-3. **Semantic Vector Re-Ranking for Evidence Validation**:
-   - Augment verbatim substring quote verification with localized sentence embeddings (e.g. via fast ONNX model) to tolerate minor OCR or whitespace deviations while still detecting hallucinations.
-4. **Interactive Recruiter Review Dashboard**:
-   - Build a lightweight review UI to allow recruiters to review candidates marked `needs_review: true` with side-by-side resume text and rejection rationales.
+1. **Human-labelled calibration set**: Hand-rank 10-15 resumes and tune weights and prompts against them, measuring rank agreement.
+2. **Reproducibility**: Store model name, prompt version and run date with every result, use a single model per run, and pass the current date to the LLM so valid 2025-2026 dates are not flagged as "future".
+3. **Bias reduction**: Anonymise names, photos and college names before LLM evaluation.
+4. **Semantic AI detection**: Use lightweight embeddings to recognise custom retrieval/agent implementations that never name a standard framework.
