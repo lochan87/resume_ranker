@@ -179,6 +179,13 @@ def assess_candidate(
     if cached_assessment:
         return cached_assessment
 
+    # Check if previously cached under alternate model name
+    for alt_model in ("gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"):
+        if alt_model != model:
+            alt_cached = _read_cache(_get_cache_path(truncated_text, alt_model, cache))
+            if alt_cached:
+                return alt_cached
+
     prompt = (
         f"<candidate_info>\n"
         f"Name: {extracted.candidate_name}\n"
@@ -187,7 +194,8 @@ def assess_candidate(
         f"<resume_text>\n{truncated_text}\n</resume_text>"
     )
 
-    call_impl = provider_fn or (lambda p: _call_gemini_api(p, key, model))
+    current_model = model
+    call_impl = provider_fn or (lambda p: _call_gemini_api(p, key, current_model))
     limiter = rate_limiter or GLOBAL_RATE_LIMITER
 
     max_attempts = 5
@@ -204,12 +212,19 @@ def assess_candidate(
             )
             if attempt < max_attempts:
                 suggested_delay = extract_retry_delay(exc)
-                delay = (
-                    suggested_delay + 1.0
-                    if suggested_delay is not None
-                    else backoff
-                )
-                logger.info(f"Rate limited or transient failure; retrying in {delay:.1f}s...")
+                # If suggested delay is huge (e.g. daily quota reached), switch model
+                if (suggested_delay and suggested_delay > 300) or "PerDay" in str(exc):
+                    if current_model != "gemini-3.5-flash-lite":
+                        logger.warning(
+                            f"Daily quota hit for {current_model}; switching to gemini-3.5-flash-lite"
+                        )
+                        current_model = "gemini-3.5-flash-lite"
+                        if provider_fn is None:
+                            call_impl = lambda p: _call_gemini_api(p, key, current_model)
+                        continue
+
+                delay = min(suggested_delay + 1.0 if suggested_delay else backoff, 20.0)
+                logger.info(f"Retrying LLM call in {delay:.1f}s...")
                 sleep_fn(delay)
                 backoff *= 2.0
 
